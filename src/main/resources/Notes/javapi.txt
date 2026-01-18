@@ -1,0 +1,94 @@
+----------------------------service----------------------------------------------------
+        public InsertResponse skipForIncome(SkipIncome request, String employeeId) {
+        InsertResponse response = new InsertResponse();
+        try {
+            if (request == null) {
+                response.setStatusCode(Constants.StatusCode.FAILED);
+                response.setStatusDescription(Constants.StatusDescription.FAILED);
+                response.setMessage("Error in saving!");
+            } else {
+                request.setCreatedBy(employeeId);
+                request.setCreatedDate(Instant.now());
+
+                incomeRepository.save(request);
+
+                response.setStatusCode(Constants.StatusCode.SUCCESS);
+                response.setStatusDescription(Constants.StatusDescription.SUCCESS);
+                response.setMessage("Data saved successfully!");
+            }
+
+        } catch (Exception e) {
+            response.setStatusCode(Constants.StatusCode.INTERNAL_SERVER_ERROR);
+            response.setStatusDescription(Constants.StatusDescription.INTERNAL_SERVER_ERROR);
+            response.setMessage("Error in saving!");
+        }
+        return response;
+    }
+
+------------------------------------------------------------------------------------------
+-------------Contoller----------------------------------------------
+    @PostMapping("/skipIncome")
+    public InsertResponse incomeSkip(@RequestBody @Valid SkipIncome request,
+                                     @RequestHeader("Authorization") String headerToken) throws Exception {
+        InsertResponse response = new InsertResponse();
+        String token = utils.checkBearer(headerToken);
+        String employeeId = utils.getUserFromToken(token);
+        utils.removeSpecialChar(String.valueOf(request));
+        response = apiService.skipForIncome(request, employeeId);
+        return response;
+    }
+
+--------------------------------------------------------------------------------------
+-----------------------------Entity---------------------------------------------------
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+@Table(name = "Solicited_Bank_Income")
+public class SkipIncome {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "sr_no")
+    private Long srNo;
+
+    @Pattern(regexp = "^[a-zA-Z0-9]*$", message = "Enter valid App Id")
+    @NotBlank(message = "App Id Should Not be Blank")
+    @Column(name = "app_id")
+    private String appId;
+
+    @Column(name = "is_skipped")
+    private Integer isSkipped;
+
+    @CreatedBy
+    @Column(name = "created_by")
+    private String createdBy;
+
+    @CreatedDate
+    @Column(name = "created_date")
+    private Instant createdDate;
+
+}
+---------------------------------------------------------------------------------
+------------------------Repository-----------------------------------------------
+public interface KycSkipRepository extends JpaRepository<SkipKyc, Long> {
+}
+-----------------------------------------------------------------------------
+------------------------Response------------------------------------------------
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class InsertResponse {
+
+    @JsonProperty("statusCode")
+    private String statusCode;
+
+    @JsonProperty("statusDescription")
+    private String statusDescription;
+
+    @JsonProperty("message")
+    private String message;
+}
+-----------------------------------------------------------------------------------
+

@@ -1,0 +1,124 @@
+-------------------Response------------------
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class IfscResponse {
+
+    @JsonProperty("statusCode")
+    private String statusCode;
+
+    @JsonProperty("statusDescription")
+    private String statusDescription;
+
+    @JsonProperty("result")
+    private IfscCode result;
+}
+------------------------------------------------------
+-----------Service----------------------------------
+    public IfscResponse getIfsc(String ifscCode) {
+        IfscResponse response = new IfscResponse();
+
+        ModelMapper modelMapper = new ModelMapper();
+        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+
+        try {
+            IfscCodeMaster ifscBank = ifscRepository.findByIfsc(ifscCode);
+            if (ifscBank == null) {
+                response.setStatusCode(Constants.StatusCode.NO_RECORDS_FOUND);
+                response.setStatusDescription(Constants.StatusDescription.NO_RECORDS_FOUND);
+            } else {
+                IfscCode map = modelMapper.map(ifscBank, IfscCode.class);
+                response.setStatusCode(Constants.StatusCode.SUCCESS);
+                response.setStatusDescription(Constants.StatusDescription.SUCCESS);
+                response.setResult(map);
+            }
+        } catch (Exception e) {
+            response.setStatusCode(Constants.StatusCode.INTERNAL_SERVER_ERROR);
+            response.setStatusDescription(Constants.StatusDescription.INTERNAL_SERVER_ERROR);
+        }
+        return response;
+    }
+----------------------------------------------------------------------------------
+-------------------Repository-----------------------------------------------------
+@Repository
+public interface IfscRepository extends JpaRepository<IfscCodeMaster, Long> {
+
+    IfscCodeMaster findByIfsc(String ifsc);
+
+}
+-------------------------------------------------------------------------------------
+---------------------------Entity-------------------------------------------------
+
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+@Table(name = "Master_IFSC_Code")
+public class IfscCodeMaster {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name="sr_no")
+    private Long srNo;
+
+    @Column(name="ifsc")
+    private String ifsc;
+
+    @Column(name="bank_name")
+    private String bankName;
+
+    @Column(name="branch")
+    private String branch;
+
+    @Column(name="address")
+    private String address;
+
+    @Column(name="city")
+    private String city;
+
+    @Column(name="district")
+    private String district;
+
+    @Column(name="state")
+    private String state;
+
+    @Column(name="contact")
+    private String contact;
+
+    @Column(name="micr_code")
+    private String micrCode;
+
+    @CreatedDate
+    @Column(name = "created_date")
+    private Instant createdDate;
+
+    @CreatedBy
+    @Column(name = "created_by")
+    private String createdBy;
+
+    @LastModifiedDate
+    @Column(name = "last_modified_date")
+    private Instant lastModifiedDate;
+
+    @LastModifiedBy
+    @Column(name = "last_modified_by")
+    private String lastModifiedBy;
+
+    @Column(name="enabled")
+    private Integer enabled;
+}
+----------------------------------------------------------------------------
+--------------request-------------------------------------------------------
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class IfscCode {
+
+    private String ifsc;
+    private String bankName;
+    private String branch;
+}
+-----------------------------------------------------------------------------------
